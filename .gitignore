@@ -1,0 +1,22 @@
+# Python 가상환경 및 캐시
+.venv/
+venv/
+ENV/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# 배포 및 빌드 산출물
+build/
+dist/
+*.egg-info/
+
+# 환경 변수 및 설정 파일
+.env
+.vscode/
+.idea/
+
+# OS 생성 파일
+.DS_Store
+Thumbs.db
