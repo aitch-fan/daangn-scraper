@@ -215,9 +215,9 @@ def save_to_csv(data: dict, article_id: str, csv_path="daangn_items.csv"):
         # 파일이 처음 생성되거나 비어있는 경우 헤더 작성
         if not file_exists:
             writer.writerow([
-                "모델", "가격", "용량", "배터리효율", 
-                "전면액정", "후면액정", "측면파손", 
-                "박스여부", "사설수리여부", "비고", "게시물번호"
+                "model", "price", "capacity", "battery", 
+                "front_damage", "back_damage", "side_damage", 
+                "box", "third_party_repair", "note", "article_id"
             ])
         
         # 데이터 행 작성
