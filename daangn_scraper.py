@@ -19,10 +19,55 @@ if sys.platform == "win32":
         pass
 
 # ==============================================================================
-# Gemini API 키 설정: 여기에 본인의 Gemini API 키를 입력하세요.
-# (환경변수 GEMINI_API_KEY가 설정되어 있다면 자동으로 우선 적용됩니다.)
+# Gemini API 키 설정 파일 경로
 # ==============================================================================
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "여기에_GEMINI_API_키를_입력하세요")
+API_KEY_FILE = "api_key.txt"
+
+def load_or_prompt_api_key() -> str:
+    """
+    1) 환경 변수(GEMINI_API_KEY) 확인
+    2) api_key.txt 파일 확인
+    3) 없으면 사용자에게 터미널에서 입력받아 api_key.txt 파일로 자동 저장
+    """
+    # 1. 환경변수 확인
+    env_key = os.getenv("GEMINI_API_KEY", "").strip()
+    if env_key and env_key != "여기에_GEMINI_API_키를_입력하세요":
+        return env_key
+
+    # 2. api_key.txt 파일 확인
+    if os.path.exists(API_KEY_FILE):
+        try:
+            with open(API_KEY_FILE, "r", encoding="utf-8") as f:
+                key = f.read().strip()
+                if key and key != "여기에_GEMINI_API_키를_입력하세요":
+                    return key
+        except Exception:
+            pass
+
+    # 3. 없으면 사용자에게 직접 입력받아 저장
+    print("\n" + "=" * 60)
+    print("🔑 Gemini API 키가 설정되지 않았습니다. (최초 1회 설정)")
+    print("💡 입력하신 키는 api_key.txt 파일에 자동 저장되어 다음부터는 묻지 않습니다.")
+    print("=" * 60)
+    
+    while True:
+        try:
+            user_key = input("👉 Gemini API 키를 입력해주세요: ").strip()
+        except (KeyboardInterrupt, EOFError):
+            print("\n프로그램을 종료합니다.")
+            sys.exit(0)
+            
+        if user_key:
+            try:
+                with open(API_KEY_FILE, "w", encoding="utf-8") as f:
+                    f.write(user_key)
+                print(f"✅ API 키가 '{API_KEY_FILE}'에 저장되었습니다.\n")
+                return user_key
+            except Exception as e:
+                print(f"⚠️ API 키 저장 실패: {e}")
+                return user_key
+        else:
+            print("❌ API 키가 입력되지 않았습니다. 다시 입력해주세요.")
 
 # Gemini 응답 형식을 강제하기 위한 Pydantic 모델
 class DaangnItemDetail(BaseModel):
@@ -128,12 +173,12 @@ def analyze_with_gemini(scraped_data: dict) -> dict:
                 types.Part.from_bytes(data=image_bytes, mime_type="image/jpeg")
             )
             
-    if not GEMINI_API_KEY or GEMINI_API_KEY == "여기에_GEMINI_API_키를_입력하세요":
-        print("\n❌ Gemini API 키가 설정되지 않았습니다.")
-        print("💡 daangn_scraper.py 파일 25번째 줄의 GEMINI_API_KEY 변수에 본인의 키를 입력해주세요.")
+    api_key = load_or_prompt_api_key()
+    if not api_key:
+        print("\n❌ Gemini API 키가 없어 분석을 진행할 수 없습니다.")
         return None
 
-    client = genai.Client(api_key=GEMINI_API_KEY)
+    client = genai.Client(api_key=api_key)
 
     import time
     candidate_models = ['gemini-3-flash-preview', 'gemini-3.8-flash']
